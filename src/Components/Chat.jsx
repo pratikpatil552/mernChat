@@ -1,13 +1,14 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import Avatar from './Avatar.jsx';
 import Logo from './Logo.jsx'
 import { UserContext } from '../UserContex.jsx';
 import { uniqBy} from "lodash";
 import  axios from 'axios';
+import Contact from './Contact.jsx';
 
 const Chat = () => {
     const [ws, setWs] = useState(null);
     const [onlinePeople, setOnlinePeople] = useState({});
+    const [offlinePeople, setOfflinePeople] = useState({});
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [newMessageText, setNewMessageText] = useState("");
     const [messages, setMessages] = useState([]);
@@ -20,7 +21,8 @@ const Chat = () => {
     },[])
 
     function connectTows (){
-      const ws = new WebSocket('ws://https://mcchatapi.azurewebsites.net');
+      // const ws = new WebSocket('ws://https://mcchatapi.azurewebsites.net');
+      const ws = new WebSocket('ws://localhost:8000');
       setWs(ws);
       ws.addEventListener('message',handleMessage);
       ws.addEventListener('close',()=>{
@@ -109,6 +111,35 @@ const Chat = () => {
       }
     },[selectedUserId])
 
+
+
+    useEffect(()=>{
+       // we will get all the people from database 
+       // we will filter out the online people 
+       // and set the offline people
+       async function getAllUsers (){
+        const response = await axios.get("/users");
+        if(response.data){
+            //console.log(response);
+            //console.log(response.data);
+            const offlinePeopleArr = response.data
+              .filter(p => p._id !==id)
+              .filter(p => !Object.keys(onlinePeople).includes(p._id));
+            const offlinePeople = {};
+
+            offlinePeopleArr.forEach(p=>{
+              offlinePeople[p._id] = p.username;
+            })
+            
+            setOfflinePeople(offlinePeople);
+        }
+        else{
+            console.log("failed to get all the users");
+        }
+      }
+      getAllUsers();
+    },[onlinePeople])
+
     const messagesWithoutDup = uniqBy(messages,'_id');
 
   return (
@@ -116,16 +147,23 @@ const Chat = () => {
       <div className="bg-white w-1/3">
         <Logo/>
         {
-          Object.keys(onlinePeople).map(userId=>(
-            <div key = {userId} onClick={()=>{selectContact(userId)}} className={'border-b border-gray-100 flex cursor-pointer '+(userId===selectedUserId ? 'bg-blue-50':'')}>
-              {userId === selectedUserId && 
-                <div className='w-1 bg-blue-500 h-12 rounded-r-md'></div>
-              }
-              <div className='flex items-center gap-2 py-2 pl-4'>
-                <Avatar username={onlinePeople[userId]} userId={userId}/>
-                <span className='text-gray-800'>{onlinePeople[userId]}</span>
-              </div>
-            </div> 
+          Object.keys(onlinePeople).map(userId=>( 
+            <Contact id = {userId} 
+              username={onlinePeople[userId]}
+              onClick={()=>{setSelectedUserId(userId)}}
+              selected = {userId === selectedUserId}
+              online={true}
+            />
+          ))
+        }
+        {
+          Object.keys(offlinePeople).map(userId=>(
+            <Contact id = {userId} 
+              username={offlinePeople[userId]}
+              onClick={()=>{setSelectedUserId(userId)}}
+              selected = {userId === selectedUserId}
+              online={false}
+            />
           ))
         }
       </div>
@@ -143,7 +181,7 @@ const Chat = () => {
               <div  className='overflow-y-scroll absolute top-0 left-0 right-0 bottom-2 '>
               {
                 messagesWithoutDup.map(message => (
-                  <div className={message.sender === id ? 'text-right' : 'text-left'}>
+                  <div key={message._id} className={message.sender === id ? 'text-right' : 'text-left'}>
                     <div className={'text-left inline-block p-2 my-2 rounded-md text-sm  '+(message.sender === id ? 'bg-blue-500 text-white' : 'bg-white text-gray-500')}>
                     {message.text}
                   </div>
