@@ -5,8 +5,8 @@ import Routes from './Routes';
 
 
 function App() {
-  // axios.defaults.baseURL = "https://mcchatapi.azurewebsites.net";
-  axios.defaults.baseURL = "http://localhost:8000"
+  axios.defaults.baseURL = "https://mcchatapi.azurewebsites.net";
+  // axios.defaults.baseURL = "http://localhost:8000"
   axios.defaults.withCredentials = true;
 
   return (
