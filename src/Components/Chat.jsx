@@ -14,7 +14,7 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const divUnderMessages = useRef();
 
-    const {username,id} = useContext(UserContext);
+    const {username,id,setId, setUsername} = useContext(UserContext);
 
     useEffect(()=>{
       connectTows();
@@ -61,6 +61,13 @@ const Chat = () => {
 
     function selectContact (userId){
        setSelectedUserId(userId);
+    }
+
+    async function logout(){
+      const response =  await axios.post("/logout");
+      setId(null);
+      setUsername(null);
+      console.log(response.data);
     }
 
     function sendMessage(ev){
@@ -128,7 +135,7 @@ const Chat = () => {
             const offlinePeople = {};
 
             offlinePeopleArr.forEach(p=>{
-              offlinePeople[p._id] = p.username;
+              offlinePeople[p._id] = p;
             })
             
             setOfflinePeople(offlinePeople);
@@ -144,11 +151,13 @@ const Chat = () => {
 
   return (
     <div className='flex h-screen'>
-      <div className="bg-white w-1/3">
+      <div className="bg-white w-1/3 flex flex-col">
+        <div className='flex-grow'>
         <Logo/>
         {
           Object.keys(onlinePeople).map(userId=>( 
             <Contact id = {userId} 
+              key = {userId}
               username={onlinePeople[userId]}
               onClick={()=>{setSelectedUserId(userId)}}
               selected = {userId === selectedUserId}
@@ -159,13 +168,20 @@ const Chat = () => {
         {
           Object.keys(offlinePeople).map(userId=>(
             <Contact id = {userId} 
-              username={offlinePeople[userId]}
+              key = {userId}
+              username={offlinePeople[userId].username}
               onClick={()=>{setSelectedUserId(userId)}}
               selected = {userId === selectedUserId}
               online={false}
             />
           ))
         }
+        </div>
+        <div className='p-2 text-center'>
+          <button
+            onClick={logout}
+           className='text-sm text-gray-500 bg-blue-100 py-1 px-2 rounded-md'>Logout</button>
+          </div>
       </div>
 
       <div className="flex flex-col bg-blue-50 w-2/3 p-2">
