@@ -21,7 +21,7 @@ const Chat = () => {
     },[])
 
     function connectTows (){
-      const ws = new WebSocket('ws://mcchatapi.azurewebsites.net');
+      const ws = new WebSocket('https://mcchatapi.azurewebsites.net');
       setWs(ws);
       ws.addEventListener('message',handleMessage);
       ws.addEventListener('close',()=>{
